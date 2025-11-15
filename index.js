@@ -108,39 +108,39 @@ const jogadores = [new Jogador({
 
 //puxando imagens
 //plataformas e fundo
-import plataformaCentral from '../imgs/plataforma-primavera-principal.jpg'
-import plataformaDireita from '../imgs/plataforma-primavera-direita.jpg'
-import plataformaEsquerda from '../imgs/plataforma-primavera-esquerda.jpg'
-import fundoArena from '../imgs/fundo-primavera.jpg'
+// import plataformaCentral from './imgs/plataforma-primavera-principal.jpg'
+// import plataformaDireita from './imgs/plataforma-primavera-direita.jpg'
+// import plataformaEsquerda from './imgs/plataforma-primavera-esquerda.jpg'
+// import fundoArena from './imgs/fundo-primavera.jpg'
 
 const imgPlataformaCentral = new Image()
-imgPlataformaCentral.src = plataformaCentral
+imgPlataformaCentral.src = './imgs/plataforma-primavera-principal.jpg'
 imgPlataformaCentral.width -= 300;
 
 const imgPlataformaDireita = new Image()
-imgPlataformaDireita.src = plataformaDireita
+imgPlataformaDireita.src = './imgs/plataforma-primavera-direita.jpg'
 
 const imgPlataformaEsquerda = new Image()
-imgPlataformaEsquerda.src = plataformaEsquerda
+imgPlataformaEsquerda.src = './imgs/plataforma-primavera-esquerda.jpg'
 
 const imgFundo = new Image()
-imgFundo.src = fundoArena
+imgFundo.src = './imgs/fundo-primavera.jpg'
 
 //acessorios
-import rostoTeste from '../imgs/cara-bravo.jpg'
-import chapeuTeste from '../imgs/chapeu-coroa.png'
-import roupaTeste from '../imgs/roupa-rei.png'
+// import rostoTeste from './imgs/cara-bravo.jpg'
+// import chapeuTeste from './imgs/chapeu-coroa.png'
+// import roupaTeste from './imgs/roupa-rei.png'
 
 const imgCaraBravo = new Image()
-imgCaraBravo.src = rostoTeste
+imgCaraBravo.src = './imgs/cara-bravo.jpg'
 
 const imgchapeuMago = new Image()
-imgchapeuMago.src = chapeuTeste
+imgchapeuMago.src = './imgs/chapeu-coroa.png'
 imgchapeuMago.width = 58;
 imgchapeuMago.height = 58 * (imgchapeuMago.naturalHeight / imgchapeuMago.naturalWidth);
 
 const imgroupaRei = new Image()
-imgroupaRei.src = roupaTeste
+imgroupaRei.src = './imgs/roupa-rei.png'
 imgroupaRei.width = 54;
 imgroupaRei.height = 54 * (imgroupaRei.naturalHeight / imgroupaRei.naturalWidth);
 
@@ -519,3 +519,4 @@ window.addEventListener('keyup', ({ code }) => { //quando soltar a tecla
             break;
     }
 })
+
