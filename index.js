@@ -1,7 +1,3 @@
-import plataforma from './imgs/plataforma-primavera-principal.jpg'
-
-console.log(plataforma)
-
 const canvas = document.querySelector('canvas');
 const c = canvas.getContext('2d');
 
@@ -21,11 +17,11 @@ class Jogador {
             y: 1
         }
 
-        this.width = 40
-        this.height = 40
+        this.width = 50
+        this.height = 50
 
-        this.velocidadeBase = 4;
-        this.saltoBase = 5;
+        this.velocidadeBase = 4.5;
+        this.saltoBase = 6.5;
         this.gravidadeBase = 0.08;
         this.pisadaBase = 8;
         this.dashBase = 7;
@@ -45,10 +41,24 @@ class Jogador {
         this.cor = cor;
     }
 
-    desenhar() { //desenha o jogador na tela
-        c.fillStyle = this.cor
-        c.fillRect(this.position.x, this.position.y, this.width, this.height)
+    desenhar() {
+    if (this.orientacao == 'esquerda') {
+        // flipado
+        c.save();
+        c.scale(-1, 1);
+        c.drawImage(imgCaraBravo, -this.position.x - this.width, this.position.y, this.width, this.height);
+        c.drawImage(imgchapeuMago, -this.position.x - imgchapeuMago.width + 5, this.position.y - imgchapeuMago.height + 5, imgchapeuMago.width, imgchapeuMago.height);
+        c.drawImage(imgroupaRei, -this.position.x - imgroupaRei.width + 2, this.position.y + this.height - imgroupaRei.height, imgroupaRei.width, imgroupaRei.height);
+        c.restore();
+    } else {
+        // normal
+        c.drawImage(imgCaraBravo, this.position.x, this.position.y, this.width, this.height);
+        c.drawImage(imgchapeuMago, this.position.x - 5, this.position.y - imgchapeuMago.height + 5, imgchapeuMago.width, imgchapeuMago.height);
+        c.drawImage(imgroupaRei, this.position.x - 2, this.position.y + this.height - imgroupaRei.height, imgroupaRei.width, imgroupaRei.height);
+        
     }
+}
+
 
     update() { //atualiza as propriedades do jogador
         this.desenhar()
@@ -65,7 +75,7 @@ class Jogador {
 }
 
 class Plataforma {
-    constructor({ x, y, width, height, cor }) { //propriedades de uma plataforma
+    constructor({ x, y, width, height, cor, image, colisoes}) { //propriedades de uma plataforma
         this.position = {
             x: x,
             y: y
@@ -74,32 +84,85 @@ class Plataforma {
         this.width = width
         this.height = height
 
+        this.image = image;
+
+        this.colisoes = colisoes;
+
         this.cor = cor
     }
 
     desenhar() { //desenha a plataforma na tela
-        c.fillStyle = this.cor
-        c.fillRect(this.position.x, this.position.y, this.width, this.height)
+      c.drawImage(this.image, this.position.x, this.position.y, this.width, this.height)
+        // c.fillStyle = this.cor
+        // c.fillRect(this.position.x, this.position.y, this.width, this.height)
     }
 }
 
 //criação dos jogadores
 const jogadores = [new Jogador({
-    cor: 'red'
+    cor: 'white'
 }), new Jogador({
-    cor: 'green'
+    cor: 'yellow'
 })];
+
+
+//puxando imagens
+//plataformas e fundo
+import plataformaCentral from '../imgs/plataforma-primavera-principal.jpg'
+import plataformaDireita from '../imgs/plataforma-primavera-direita.jpg'
+import plataformaEsquerda from '../imgs/plataforma-primavera-esquerda.jpg'
+import fundoArena from '../imgs/fundo-primavera.jpg'
+
+const imgPlataformaCentral = new Image()
+imgPlataformaCentral.src = plataformaCentral
+imgPlataformaCentral.width -= 300;
+
+const imgPlataformaDireita = new Image()
+imgPlataformaDireita.src = plataformaDireita
+
+const imgPlataformaEsquerda = new Image()
+imgPlataformaEsquerda.src = plataformaEsquerda
+
+const imgFundo = new Image()
+imgFundo.src = fundoArena
+
+//acessorios
+import rostoTeste from '../imgs/cara-bravo.jpg'
+import chapeuTeste from '../imgs/chapeu-coroa.png'
+import roupaTeste from '../imgs/roupa-rei.png'
+
+const imgCaraBravo = new Image()
+imgCaraBravo.src = rostoTeste
+
+const imgchapeuMago = new Image()
+imgchapeuMago.src = chapeuTeste
+imgchapeuMago.width = 58;
+imgchapeuMago.height = 58 * (imgchapeuMago.naturalHeight / imgchapeuMago.naturalWidth);
+
+const imgroupaRei = new Image()
+imgroupaRei.src = roupaTeste
+imgroupaRei.width = 54;
+imgroupaRei.height = 54 * (imgroupaRei.naturalHeight / imgroupaRei.naturalWidth);
+
 
 //criação das plataformas
 const plataformas = [new Plataforma({
-    x: 200, y: 600, width: 200, height: 200, cor: 'blue'
+    x: (canvas.width/2 - imgPlataformaCentral.width/2) /*plataforma no centro*/, y: 600, width: imgPlataformaCentral.width, height: imgPlataformaCentral.height, cor: 'blue', image: imgPlataformaCentral, colisoes: true,
 }), new Plataforma({
-    x: 500, y: 750, width: 200, height: 50, cor: 'blue'
+    x: (3*canvas.width/4 - imgPlataformaDireita.width/2) /*plataforma no centro*/, y: 400, width: imgPlataformaDireita.width, height: imgPlataformaDireita.height, cor: 'blue', image: imgPlataformaDireita, colisoes: false
 }), new Plataforma({
-    x: 860, y: 800, width: 200, height: 50, cor: 'blue'
-}), new Plataforma({
-    x: -1200, y: 850, width: 4000, height: 200, cor: 'blue'
+    x: (canvas.width/4 - imgPlataformaEsquerda.width/2) /*plataforma no centro*/, y: 400, width: imgPlataformaEsquerda.width, height: imgPlataformaEsquerda.height, cor: 'blue', image: imgPlataformaEsquerda, colisoes: false
 })];
+
+//outras plataformas (antigas)
+// , new Plataforma({
+//     x: 500, y: 750, width: 200, height: 50, cor: 'blue', image: image,
+// }), new Plataforma({
+//     x: 860, y: 800, width: 200, height: 50, cor: 'blue', image: image,
+// }), new Plataforma({
+//     x: -1200, y: 850, width: 4000, height: 200, cor: 'blue', image: image,
+// })
+
 
 //monitorando as teclas pressionadas
 const teclas = [{
@@ -146,7 +209,8 @@ function animar() { //função principal que atualiza a tela
     requestAnimationFrame(animar); // loop infinito
 
     c.fillStyle = 'white';
-    c.fillRect(0, 0, canvas.width, canvas.height);
+    c.drawImage(imgFundo, 0, 0, canvas.width, canvas.height)
+    // c.fillRect(0, 0, canvas.width, canvas.height);
 
     jogadores.forEach(jogador => {
         jogador.update(); //atualiza o jogador
@@ -206,6 +270,7 @@ function animar() { //função principal que atualiza a tela
 
             jogadores[i].estaDandoDash = true;
             jogadores[i].podeDarDash = false;
+            teclas[i].dash.pressionada = false;
 
             // duração da animação do dash
             setTimeout(() => {
@@ -275,40 +340,42 @@ function animar() { //função principal que atualiza a tela
                 jogador.podePisar = false; // impede que o jogador dê uma pisada
             }
 
-            // colisão com plataformas na vertical para cima (também cuida de casos em que o jogador entra dentro da plataforma)
-            if (((jogador.position.y >= plataforma.position.y + plataforma.height && jogador.position.y + jogador.velocidade.y <= plataforma.position.y + plataforma.height) || (jogador.position.y <= plataforma.position.y + plataforma.height && jogador.position.y > plataforma.position.y)) && jogador.position.x + jogador.width > plataforma.position.x && jogador.position.x < plataforma.position.x + plataforma.width) {
-                jogador.position.y = plataforma.position.y + plataforma.height;
-                jogador.velocidade.y = 0.1;
+            if(plataforma.colisoes) {
+              // colisão com plataformas na vertical para cima (também cuida de casos em que o jogador entra dentro da plataforma)
+              if (((jogador.position.y >= plataforma.position.y + plataforma.height && jogador.position.y + jogador.velocidade.y <= plataforma.position.y + plataforma.height) || (jogador.position.y <= plataforma.position.y + plataforma.height && jogador.position.y > plataforma.position.y)) && jogador.position.x + jogador.width > plataforma.position.x && jogador.position.x < plataforma.position.x + plataforma.width) {
+                  jogador.position.y = plataforma.position.y + plataforma.height;
+                  jogador.velocidade.y = 0.1;
 
-                jogador.podePular = false; // impede que o jogador pule (pois há uma plataforma acima)
-            }
+                  jogador.podePular = false; // impede que o jogador pule (pois há uma plataforma acima)
+              }
 
-            // fix caso entre dentro da plataforma com outro jogador em cima
-            if (jogador.position.y + jogador.height > plataforma.position.y && jogador.position.y < plataforma.position.y + plataforma.height && jogador.position.x + jogador.width > plataforma.position.x && jogador.position.x < plataforma.position.x + plataforma.width) {
-                jogador.position.y = plataforma.position.y - jogador.height;
-                jogador.velocidade.y = 0;
+              // fix caso entre dentro da plataforma com outro jogador em cima
+              if (jogador.position.y + jogador.height > plataforma.position.y && jogador.position.y < plataforma.position.y + plataforma.height && jogador.position.x + jogador.width > plataforma.position.x && jogador.position.x < plataforma.position.x + plataforma.width) {
+                  jogador.position.y = plataforma.position.y - jogador.height;
+                  jogador.velocidade.y = 0;
 
-                if (outroJogador.position.y + outroJogador.height > jogador.position.y && outroJogador.position.y < jogador.position.y + jogador.height) {
-                    outroJogador.velocidade.y -= 1;
-                }
-            }
+                  if (outroJogador.position.y + outroJogador.height > jogador.position.y && outroJogador.position.y < jogador.position.y + jogador.height) {
+                      outroJogador.velocidade.y -= 1;
+                  }
+              }
 
-            // colisão com plataformas na horizontal esquerda para direita
-            if (jogador.position.y + jogador.height >= plataforma.position.y && jogador.position.y <= plataforma.position.y + plataforma.height && jogador.position.x + jogador.width <= plataforma.position.x && jogador.position.x + jogador.width + jogador.velocidade.x >= plataforma.position.x) {
-                if (jogador.position.x + jogador.width < plataforma.position.x) {
-                    jogador.position.x = plataforma.position.x - jogador.width;
-                }
+              // colisão com plataformas na horizontal esquerda para direita
+              if (jogador.position.y + jogador.height >= plataforma.position.y && jogador.position.y <= plataforma.position.y + plataforma.height && jogador.position.x + jogador.width <= plataforma.position.x && jogador.position.x + jogador.width + jogador.velocidade.x >= plataforma.position.x) {
+                  if (jogador.position.x + jogador.width < plataforma.position.x) {
+                      jogador.position.x = plataforma.position.x - jogador.width;
+                  }
 
-                jogador.velocidade.x = 0;
-            }
+                  jogador.velocidade.x = 0;
+              }
 
-            // colisão com plataformas na horizontal direita para esquerda
-            if (jogador.position.y + jogador.height >= plataforma.position.y && jogador.position.y <= plataforma.position.y + plataforma.height && jogador.position.x >= plataforma.position.x + plataforma.width && jogador.position.x + jogador.velocidade.x <= plataforma.position.x + plataforma.width) {
-                if (jogador.position.x > plataforma.position.x + plataforma.width) {
-                    jogador.position.x = plataforma.position.x + plataforma.width;
-                }
+              // colisão com plataformas na horizontal direita para esquerda
+              if (jogador.position.y + jogador.height >= plataforma.position.y && jogador.position.y <= plataforma.position.y + plataforma.height && jogador.position.x >= plataforma.position.x + plataforma.width && jogador.position.x + jogador.velocidade.x <= plataforma.position.x + plataforma.width) {
+                  if (jogador.position.x > plataforma.position.x + plataforma.width) {
+                      jogador.position.x = plataforma.position.x + plataforma.width;
+                  }
 
-                jogador.velocidade.x = 0;
+                  jogador.velocidade.x = 0;
+              }
             }
         })
 
