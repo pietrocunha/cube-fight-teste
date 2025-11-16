@@ -7,10 +7,10 @@ canvas.height = 900; //innerHeight
 
 
 class Jogador {
-    constructor({ cor }) { //propriedades do jogador
+    constructor({ x, y, orientacao, cor }) { //propriedades do jogador
         this.position = {
-            x: 100,
-            y: 100
+            x: x,
+            y: y
         }
         this.velocidade = {
             x: 0,
@@ -20,62 +20,107 @@ class Jogador {
         this.width = 50
         this.height = 50
 
-        this.velocidadeBase = 4.5;
-        this.saltoBase = 6.5;
-        this.gravidadeBase = 0.08;
-        this.pisadaBase = 8;
-        this.dashBase = 7;
+        this.velocidadeBase = 13;
+        this.saltoBase = 20;
+        this.gravidadeBase = 1;
+        this.pisadaBase = 21;
+        this.dashBase = 18;
         this.dashCooldown = 500; // tempo em ms
-        this.ataqueBase = 12;
+        this.ataqueBase = 35;
         this.alcanceBase = 45;
 
         this.podePular = false;
+        this.podeDoubleJump = false;
         this.podePisar = false;
         this.podeDarDash = true;
         this.podeAtacar = true;
+        this.soltaParticula = true;
 
-        this.orientacao = 'direita';
+        this.orientacao = orientacao; //direita ou esquerda
         this.estaDandoDash = false;
         this.estaSendoAtacado = false;
+        this.estaDandoPisada = false;
 
+        this.debounce = false; //faz o jogador ter que soltar o W antes de dar um double jump
         this.cor = cor;
     }
 
-    desenhar() {
-    if (this.orientacao == 'esquerda') {
-        // flipado
-        c.save();
-        c.scale(-1, 1);
-        c.drawImage(imgCaraBravo, -this.position.x - this.width, this.position.y, this.width, this.height);
-        c.drawImage(imgchapeuMago, -this.position.x - imgchapeuMago.width + 5, this.position.y - imgchapeuMago.height + 5, imgchapeuMago.width, imgchapeuMago.height);
-        c.drawImage(imgroupaRei, -this.position.x - imgroupaRei.width + 2, this.position.y + this.height - imgroupaRei.height, imgroupaRei.width, imgroupaRei.height);
-        c.restore();
-    } else {
-        // normal
-        c.drawImage(imgCaraBravo, this.position.x, this.position.y, this.width, this.height);
-        c.drawImage(imgchapeuMago, this.position.x - 5, this.position.y - imgchapeuMago.height + 5, imgchapeuMago.width, imgchapeuMago.height);
-        c.drawImage(imgroupaRei, this.position.x - 2, this.position.y + this.height - imgroupaRei.height, imgroupaRei.width, imgroupaRei.height);
-        
+    desenhar() { //desenha o jogador na tela
+        c.fillStyle = this.cor
+        c.fillRect(this.position.x, this.position.y, this.width, this.height)
     }
-}
-
 
     update() { //atualiza as propriedades do jogador
         this.desenhar()
         this.position.y += this.velocidade.y
         this.position.x += this.velocidade.x
 
-        if (this.position.y + this.height + this.velocidade.y <= canvas.height)
+        if (!this.estaDandoDash) {
             this.velocidade.y += this.gravidadeBase; //acelera com a gravidade
-        else {
-            this.velocidade.y = 0;
-            this.position.y = canvas.height - this.height;
         }
+
     }
 }
 
+// ANTES DE LIMITAR O FPS (FUNCIONA BEM EM 180HZ)
+// class Jogador {
+//     constructor({ x, y, orientacao, cor }) { //propriedades do jogador
+//         this.position = {
+//             x: x,
+//             y: y
+//         }
+//         this.velocidade = {
+//             x: 0,
+//             y: 1
+//         }
+
+//         this.width = 50
+//         this.height = 50
+
+//         this.velocidadeBase = 4.5;
+//         this.saltoBase = 6.5;
+//         this.gravidadeBase = 0.08;
+//         this.pisadaBase = 8;
+//         this.dashBase = 7;
+//         this.dashCooldown = 500; // tempo em ms
+//         this.ataqueBase = 12;
+//         this.alcanceBase = 45;
+
+//         this.podePular = false;
+//         this.podeDoubleJump = false;
+//         this.podePisar = false;
+//         this.podeDarDash = true;
+//         this.podeAtacar = true;
+//         this.soltaParticula = true;
+
+//         this.orientacao = orientacao; //direita ou esquerda
+//         this.estaDandoDash = false;
+//         this.estaSendoAtacado = false;
+//         this.estaDandoPisada = false;
+
+//         this.debounce = false; //faz o jogador ter que soltar o W antes de dar um double jump
+//         this.cor = cor;
+//     }
+
+//     desenhar() { //desenha o jogador na tela
+//         c.fillStyle = this.cor
+//         c.fillRect(this.position.x, this.position.y, this.width, this.height)
+//     }
+
+//     update() { //atualiza as propriedades do jogador
+//         this.desenhar()
+//         this.position.y += this.velocidade.y
+//         this.position.x += this.velocidade.x
+
+//         if (!this.estaDandoDash) {
+//             this.velocidade.y += this.gravidadeBase; //acelera com a gravidade
+//         }
+
+//     }
+// }
+
 class Plataforma {
-    constructor({ x, y, width, height, cor, image, colisoes}) { //propriedades de uma plataforma
+    constructor({ x, y, width, height, cor, image, colisoes }) { //propriedades de uma plataforma
         this.position = {
             x: x,
             y: y
@@ -92,77 +137,93 @@ class Plataforma {
     }
 
     desenhar() { //desenha a plataforma na tela
-      c.drawImage(this.image, this.position.x, this.position.y, this.width, this.height)
-        // c.fillStyle = this.cor
-        // c.fillRect(this.position.x, this.position.y, this.width, this.height)
+        //c.drawImage(this.image, this.position.x, this.position.y, this.width, this.height)
+        c.fillStyle = this.cor
+        c.fillRect(this.position.x, this.position.y, this.width, this.height)
     }
+}
+
+class Particula {
+    constructor({ x, y, raio, cor, velocidade }) { //propriedades de uma partícula
+        this.x = x;
+        this.y = y;
+        this.raio = raio;
+        this.cor = cor;
+        this.velocidade = velocidade;
+        this.alpha = 1;
+    }
+
+    desenhar() {
+        c.save()
+        c.globalAlpha = this.alpha //fade out
+        c.fillStyle = this.cor
+
+        // quadrado centralizado no ponto (x, y)
+        c.fillRect(
+            this.x - this.raio,
+            this.y - this.raio,
+            this.raio * 2,
+            this.raio * 2
+        )
+
+        c.restore()
+    }
+
+
+    update() {
+        this.desenhar()
+        this.x += this.velocidade.x
+        this.y += this.velocidade.y
+
+        this.alpha -= 0.03; //fade out das particulas
+        if (this.alpha <= 0) this.alpha = 0;
+
+    }
+
+
+}
+
+//função que solta particulas
+function soltarParticulas(posX, posY, velocidadeX, velocidadeY, jogador) {
+    particulas.push(
+        new Particula({
+            x: posX,
+            y: posY,
+            raio: Math.random() * 2 + 1,
+            cor: jogador.cor,
+            velocidade: {
+                x: velocidadeX * 2,
+                y: velocidadeY * 2,
+            }
+        })
+    )
 }
 
 //criação dos jogadores
 const jogadores = [new Jogador({
-    cor: 'white'
+    x: canvas.width / 4,
+    y: 100,
+    orientacao: 'direita',
+    cor: 'red',
 }), new Jogador({
-    cor: 'yellow'
+    x: 3 * canvas.width / 4 - 50,
+    y: 100,
+    orientacao: 'esquerda',
+    cor: 'green',
 })];
-
-
-//puxando imagens
-//plataformas e fundo
-// import plataformaCentral from './imgs/plataforma-primavera-principal.jpg'
-// import plataformaDireita from './imgs/plataforma-primavera-direita.jpg'
-// import plataformaEsquerda from './imgs/plataforma-primavera-esquerda.jpg'
-// import fundoArena from './imgs/fundo-primavera.jpg'
-
-const imgPlataformaCentral = new Image()
-imgPlataformaCentral.src = './imgs/plataforma-primavera-principal.jpg'
-imgPlataformaCentral.width -= 300;
-
-const imgPlataformaDireita = new Image()
-imgPlataformaDireita.src = './imgs/plataforma-primavera-direita.jpg'
-
-const imgPlataformaEsquerda = new Image()
-imgPlataformaEsquerda.src = './imgs/plataforma-primavera-esquerda.jpg'
-
-const imgFundo = new Image()
-imgFundo.src = './imgs/fundo-primavera.jpg'
-
-//acessorios
-// import rostoTeste from './imgs/cara-bravo.jpg'
-// import chapeuTeste from './imgs/chapeu-coroa.png'
-// import roupaTeste from './imgs/roupa-rei.png'
-
-const imgCaraBravo = new Image()
-imgCaraBravo.src = './imgs/cara-bravo.jpg'
-
-const imgchapeuMago = new Image()
-imgchapeuMago.src = './imgs/chapeu-coroa.png'
-imgchapeuMago.width = 58;
-imgchapeuMago.height = 58 * (imgchapeuMago.naturalHeight / imgchapeuMago.naturalWidth);
-
-const imgroupaRei = new Image()
-imgroupaRei.src = './imgs/roupa-rei.png'
-imgroupaRei.width = 54;
-imgroupaRei.height = 54 * (imgroupaRei.naturalHeight / imgroupaRei.naturalWidth);
-
 
 //criação das plataformas
 const plataformas = [new Plataforma({
-    x: (canvas.width/2 - imgPlataformaCentral.width/2) /*plataforma no centro*/, y: 600, width: imgPlataformaCentral.width, height: imgPlataformaCentral.height, cor: 'blue', image: imgPlataformaCentral, colisoes: true,
+    x: 200, y: 550, width: 200, height: 200, cor: 'blue', image: '', colisoes: true,
 }), new Plataforma({
-    x: (3*canvas.width/4 - imgPlataformaDireita.width/2) /*plataforma no centro*/, y: 400, width: imgPlataformaDireita.width, height: imgPlataformaDireita.height, cor: 'blue', image: imgPlataformaDireita, colisoes: false
+    x: 500, y: 700, width: 200, height: 50, cor: 'blue', image: '', colisoes: true,
 }), new Plataforma({
-    x: (canvas.width/4 - imgPlataformaEsquerda.width/2) /*plataforma no centro*/, y: 400, width: imgPlataformaEsquerda.width, height: imgPlataformaEsquerda.height, cor: 'blue', image: imgPlataformaEsquerda, colisoes: false
+    x: 860, y: 800, width: 200, height: 50, cor: 'blue', image: '', colisoes: true,
+}), new Plataforma({
+    x: -1200, y: 850, width: 4000, height: 200, cor: 'blue', image: '', colisoes: true,
 })];
 
-//outras plataformas (antigas)
-// , new Plataforma({
-//     x: 500, y: 750, width: 200, height: 50, cor: 'blue', image: image,
-// }), new Plataforma({
-//     x: 860, y: 800, width: 200, height: 50, cor: 'blue', image: image,
-// }), new Plataforma({
-//     x: -1200, y: 850, width: 4000, height: 200, cor: 'blue', image: image,
-// })
-
+const particulas = []
 
 //monitorando as teclas pressionadas
 const teclas = [{
@@ -205,15 +266,29 @@ const teclas = [{
     },
 }]
 
-function animar() { //função principal que atualiza a tela
+let fps = 60;
+let intervaloFrame = 1000 / fps; // ~16.67ms
+let ultimoFrame = 0;
+
+
+function animar(tempoAtual) { //função principal que atualiza a tela
     requestAnimationFrame(animar); // loop infinito
 
+    const delta = tempoAtual - ultimoFrame;
+    if (delta < intervaloFrame) return; // ainda não passou tempo suficiente
+
+    ultimoFrame = tempoAtual;
+
     c.fillStyle = 'white';
-    c.drawImage(imgFundo, 0, 0, canvas.width, canvas.height)
-    // c.fillRect(0, 0, canvas.width, canvas.height);
+    //c.drawImage(imgFundo, 0, 0, canvas.width, canvas.height)
+    c.fillRect(0, 0, canvas.width, canvas.height);
 
     jogadores.forEach(jogador => {
         jogador.update(); //atualiza o jogador
+    })
+
+    particulas.forEach(particula => {
+        particula.update()
     })
 
     plataformas.forEach(plataforma => {
@@ -221,11 +296,16 @@ function animar() { //função principal que atualiza a tela
     })
 
 
+
+
     //movimento dos jogadores
     for (let i = 0; i < 2; i++) { //i assume 0 e 1 (só podem ter 2 jogadores)
+        let outroJogador = jogadores[1]; //definindo o outro jogador
+        if (outroJogador == jogadores[i]) outroJogador = jogadores[0];
 
         //movimentos horizontais
-        if (teclas[i].direita.pressionada) {
+        //movimento pra direita
+        if (teclas[i].direita.pressionada && !teclas[i].esquerda.pressionada) {
             if ((jogadores[i].estaDandoDash && jogadores[i].orientacao == 'esquerda') || !jogadores[i].estaDandoDash) { // verificação se o jogador está dando dash
                 if (!jogadores[i].estaSendoAtacado) { // verificação se o jogador está sendo atacado
                     jogadores[i].velocidade.x = jogadores[i].velocidadeBase; //velocidade para a direita
@@ -233,8 +313,8 @@ function animar() { //função principal que atualiza a tela
 
                 jogadores[i].orientacao = 'direita';
             }
-
-        } else if (teclas[i].esquerda.pressionada) {
+        //movimento pra esquerda
+        } else if (teclas[i].esquerda.pressionada && !teclas[i].direita.pressionada) {
             if ((jogadores[i].estaDandoDash && jogadores[i].orientacao == 'direita') || !jogadores[i].estaDandoDash) { // verificação se o jogador está dando dash
                 if (!jogadores[i].estaSendoAtacado) { // verificação se o jogador está sendo atacado
                     jogadores[i].velocidade.x = -jogadores[i].velocidadeBase; //velocidade para a esquerda
@@ -242,35 +322,101 @@ function animar() { //função principal que atualiza a tela
 
                 jogadores[i].orientacao = 'esquerda';
             }
-
+        
         } else if (!jogadores[i].estaDandoDash && !jogadores[i].estaSendoAtacado) {
             jogadores[i].velocidade.x = 0;
         }
 
+        if (teclas[i].direita.pressionada && teclas[i].esquerda.pressionada) { //caso o jogador aperte esquerda e direita ao mesmo tempo
+            if (!jogadores[i].estaDandoDash && !jogadores[i].estaSendoAtacado) {
+                jogadores[i].velocidade.x = 0;
+            }
+        }
 
         //salto
         if (teclas[i].cima.pressionada && jogadores[i].podePular) { // salto (somente se o jogador estiver pisando em uma plataforma ou em outro jogador)
             jogadores[i].velocidade.y -= jogadores[i].saltoBase;
 
             jogadores[i].podePisar = true; //carrega a pisada
+            jogadores[i].podeDoubleJump = true;
+            jogadores[i].debounce = true; //impede que o double jump ative imediatamente
+        }
+
+        //double jump
+        if (teclas[i].cima.pressionada && jogadores[i].podeDoubleJump && !jogadores[i].debounce) {
+            jogadores[i].velocidade.y = -jogadores[i].saltoBase;
+            jogadores[i].podeDoubleJump = false;
+
+            console.log(jogadores[i].position.x)
+
+
+            //solta partículas
+
+            for(let j = 0; j < 8; j++) {// j é o numero de particulas
+                let posX = jogadores[i].position.x + jogadores[i].width / 2 + ((Math.random() - 0.5) * 30);
+                let posY = jogadores[i].position.y + jogadores[i].height;
+
+                let velocidadeX = (Math.random() - 0.5) * 4;
+                let velocidadeY = Math.random();
+
+                if (posX > jogadores[i].position.x + jogadores[i].width / 2) {
+                    if (velocidadeX < 0) velocidadeX *= -1;
+                } else if (velocidadeX > 0) velocidadeX *= -1;
+
+                soltarParticulas(posX, posY, velocidadeX, velocidadeY, jogadores[i]);
+            }
         }
 
 
         //pisada
         if (teclas[i].baixo.pressionada && jogadores[i].podePisar) {
-            jogadores[i].velocidade.y += jogadores[i].pisadaBase;
+            if(jogadores[i].velocidade.y <= 0) jogadores[i].velocidade.y += jogadores[i].pisadaBase * 1.4;
+            else jogadores[i].velocidade.y += jogadores[i].pisadaBase;
 
             jogadores[i].podePisar = false; //gasta a pisada
+            jogadores[i].estaDandoPisada = true;
+        }
+
+        //solta partícula enquanto o jogador estiver dando uma pisada
+        if(jogadores[i].estaDandoPisada && jogadores[i].soltaParticula) {
+            jogadores[i].soltaParticula = false;
+
+            let posX = jogadores[i].position.x + jogadores[i].width / 2 + ((Math.random() - 0.5) * 30);
+            let posY = jogadores[i].position.y + jogadores[i].height;
+
+            let velocidadeX = (Math.random() - 0.5);
+            let velocidadeY = (Math.random() *-1);
+
+            if (velocidadeX > 0 && jogadores[i].velocidade.x > 0) {
+                velocidadeX *= -1;
+            } else if (velocidadeX < 0 && jogadores[i].velocidade.x < 0) velocidadeX *= -1;
+
+            soltarParticulas(posX, posY, velocidadeX, velocidadeY, jogadores[i])
+
+            setTimeout(() => {
+                jogadores[i].soltaParticula = true;
+            }, 17);
+
         }
 
         //dash
         if (teclas[i].dash.pressionada && jogadores[i].podeDarDash) {
-            if (jogadores[i].orientacao == 'direita') jogadores[i].velocidade.x += jogadores[i].dashBase;
-            else jogadores[i].velocidade.x -= jogadores[i].dashBase;
+            if (jogadores[i].orientacao == 'direita') {
+                if (jogadores[i].velocidade.x == 0) jogadores[i].velocidade.x += jogadores[i].dashBase * 1.4;
+                else jogadores[i].velocidade.x += jogadores[i].dashBase;
+            }
+            else {
+                if (jogadores[i].velocidade.x == 0) jogadores[i].velocidade.x -= jogadores[i].dashBase * 1.4;
+                else jogadores[i].velocidade.x -= jogadores[i].dashBase;
+            }
+
+            jogadores[i].velocidade.y = 0;
 
             jogadores[i].estaDandoDash = true;
             jogadores[i].podeDarDash = false;
             teclas[i].dash.pressionada = false;
+            jogadores[i].soltaParticula = true;
+            jogadores[i].estaDandoPisada = false;
 
             // duração da animação do dash
             setTimeout(() => {
@@ -281,13 +427,57 @@ function animar() { //função principal que atualiza a tela
             setTimeout(() => {
                 jogadores[i].podeDarDash = true;
             }, jogadores[i].dashCooldown);
+
+            // particulas do dash
+            for (let j = 0; j < 1; j++) {
+                let posX = jogadores[i].position.x + jogadores[i].width / 2;
+                let posY = jogadores[i].position.y + jogadores[i].height + ((Math.random() - 0.5) * 30);
+
+                let velocidadeX = (Math.random() - 0.5) * 6;
+                let velocidadeY = (Math.random() - 0.5);
+
+                if (velocidadeX > 0 && jogadores[i].velocidade.x > 0) {
+                    velocidadeX *= -1;
+                } else if (velocidadeX < 0 && jogadores[i].velocidade.x < 0) velocidadeX *= -1;
+
+                particulas.push(
+                    new Particula({
+                        x: posX,
+                        y: posY,
+                        raio: Math.random() * 2 + 1,
+                        cor: jogadores[i].cor,
+                        velocidade: {
+                            x: velocidadeX,
+                            y: velocidadeY,
+                        }
+                    })
+                )
+            }
         }
 
+        //solta partícula enquanto o jogador estiver dando dash
+        if(jogadores[i].estaDandoDash && jogadores[i].soltaParticula) {
+            jogadores[i].soltaParticula = false;
+
+            let posX = jogadores[i].position.x + jogadores[i].width / 2;
+            let posY = jogadores[i].position.y + jogadores[i].height + ((Math.random() - 0.5) * 30);
+
+            let velocidadeX = (Math.random() - 0.5) ;
+            let velocidadeY = (Math.random() - 0.5);
+
+            if (velocidadeX > 0 && jogadores[i].velocidade.x > 0) {
+                velocidadeX *= -1;
+            } else if (velocidadeX < 0 && jogadores[i].velocidade.x < 0) velocidadeX *= -1;
+
+            soltarParticulas(posX, posY, velocidadeX, velocidadeY, jogadores[i])
+
+            setTimeout(() => {
+                jogadores[i].soltaParticula = true;
+            }, 10);
+
+        }
 
         //ataque
-        let outroJogador = jogadores[1]; //definindo o outro jogador
-        if (outroJogador == jogadores[i]) outroJogador = jogadores[0];
-
         if (teclas[i].ataque.pressionada && jogadores[i].podeAtacar) { //condição de ataque
             let orientacaoAtaque = jogadores[i].orientacao == 'direita' ? 1 : -1; //definindo a orientação do ataque
             console.log(orientacaoAtaque);
@@ -337,45 +527,47 @@ function animar() { //função principal que atualiza a tela
                 jogador.position.y = plataforma.position.y - jogador.height;
 
                 jogador.podePular = true; // permite que o jogador pule (pois está em cima de uma plataforma)
+                jogador.podeDoubleJump = false;
                 jogador.podePisar = false; // impede que o jogador dê uma pisada
+                jogador.estaDandoPisada = false;
             }
 
-            if(plataforma.colisoes) {
-              // colisão com plataformas na vertical para cima (também cuida de casos em que o jogador entra dentro da plataforma)
-              if (((jogador.position.y >= plataforma.position.y + plataforma.height && jogador.position.y + jogador.velocidade.y <= plataforma.position.y + plataforma.height) || (jogador.position.y <= plataforma.position.y + plataforma.height && jogador.position.y > plataforma.position.y)) && jogador.position.x + jogador.width > plataforma.position.x && jogador.position.x < plataforma.position.x + plataforma.width) {
-                  jogador.position.y = plataforma.position.y + plataforma.height;
-                  jogador.velocidade.y = 0.1;
+            if (plataforma.colisoes) {
+                // colisão com plataformas na vertical para cima (também cuida de casos em que o jogador entra dentro da plataforma)
+                if (((jogador.position.y >= plataforma.position.y + plataforma.height && jogador.position.y + jogador.velocidade.y <= plataforma.position.y + plataforma.height) || (jogador.position.y <= plataforma.position.y + plataforma.height && jogador.position.y > plataforma.position.y)) && jogador.position.x + jogador.width > plataforma.position.x && jogador.position.x < plataforma.position.x + plataforma.width) {
+                    jogador.position.y = plataforma.position.y + plataforma.height;
+                    jogador.velocidade.y = 0.1;
 
-                  jogador.podePular = false; // impede que o jogador pule (pois há uma plataforma acima)
-              }
+                    jogador.podePular = false; // impede que o jogador pule (pois há uma plataforma acima)
+                }
 
-              // fix caso entre dentro da plataforma com outro jogador em cima
-              if (jogador.position.y + jogador.height > plataforma.position.y && jogador.position.y < plataforma.position.y + plataforma.height && jogador.position.x + jogador.width > plataforma.position.x && jogador.position.x < plataforma.position.x + plataforma.width) {
-                  jogador.position.y = plataforma.position.y - jogador.height;
-                  jogador.velocidade.y = 0;
+                // fix caso entre dentro da plataforma com outro jogador em cima
+                if (jogador.position.y + jogador.height > plataforma.position.y && jogador.position.y < plataforma.position.y + plataforma.height && jogador.position.x + jogador.width > plataforma.position.x && jogador.position.x < plataforma.position.x + plataforma.width) {
+                    jogador.position.y = plataforma.position.y - jogador.height;
+                    jogador.velocidade.y = 0;
 
-                  if (outroJogador.position.y + outroJogador.height > jogador.position.y && outroJogador.position.y < jogador.position.y + jogador.height) {
-                      outroJogador.velocidade.y -= 1;
-                  }
-              }
+                    if (outroJogador.position.y + outroJogador.height > jogador.position.y && outroJogador.position.y < jogador.position.y + jogador.height) {
+                        outroJogador.velocidade.y -= 1;
+                    }
+                }
 
-              // colisão com plataformas na horizontal esquerda para direita
-              if (jogador.position.y + jogador.height >= plataforma.position.y && jogador.position.y <= plataforma.position.y + plataforma.height && jogador.position.x + jogador.width <= plataforma.position.x && jogador.position.x + jogador.width + jogador.velocidade.x >= plataforma.position.x) {
-                  if (jogador.position.x + jogador.width < plataforma.position.x) {
-                      jogador.position.x = plataforma.position.x - jogador.width;
-                  }
+                // colisão com plataformas na horizontal esquerda para direita
+                if (jogador.position.y + jogador.height >= plataforma.position.y && jogador.position.y <= plataforma.position.y + plataforma.height && jogador.position.x + jogador.width <= plataforma.position.x && jogador.position.x + jogador.width + jogador.velocidade.x >= plataforma.position.x) {
+                    if (jogador.position.x + jogador.width < plataforma.position.x) {
+                        jogador.position.x = plataforma.position.x - jogador.width;
+                    }
 
-                  jogador.velocidade.x = 0;
-              }
+                    jogador.velocidade.x = 0;
+                }
 
-              // colisão com plataformas na horizontal direita para esquerda
-              if (jogador.position.y + jogador.height >= plataforma.position.y && jogador.position.y <= plataforma.position.y + plataforma.height && jogador.position.x >= plataforma.position.x + plataforma.width && jogador.position.x + jogador.velocidade.x <= plataforma.position.x + plataforma.width) {
-                  if (jogador.position.x > plataforma.position.x + plataforma.width) {
-                      jogador.position.x = plataforma.position.x + plataforma.width;
-                  }
+                // colisão com plataformas na horizontal direita para esquerda
+                if (jogador.position.y + jogador.height >= plataforma.position.y && jogador.position.y <= plataforma.position.y + plataforma.height && jogador.position.x >= plataforma.position.x + plataforma.width && jogador.position.x + jogador.velocidade.x <= plataforma.position.x + plataforma.width) {
+                    if (jogador.position.x > plataforma.position.x + plataforma.width) {
+                        jogador.position.x = plataforma.position.x + plataforma.width;
+                    }
 
-                  jogador.velocidade.x = 0;
-              }
+                    jogador.velocidade.x = 0;
+                }
             }
         })
 
@@ -388,7 +580,9 @@ function animar() { //função principal que atualiza a tela
             jogador.position.y = outroJogador.position.y - jogador.height;
 
             jogador.podePular = true; // permite que o jogador pule (pois está em cima do outro jogador)
+            jogador.podeDoubleJump = false;
             jogador.podePisar = false; // impede que o jogador dê uma pisada
+            jogador.estaDandoPisada = false;
         }
 
         // players na vertical para cima (também cuida de casos em que o jogador entra dentro do outro)
@@ -403,21 +597,75 @@ function animar() { //função principal que atualiza a tela
         }
 
         // players na horizontal esquerda para direita
-        if (jogador.position.y + jogador.height >= outroJogador.position.y && jogador.position.y <= outroJogador.position.y + outroJogador.height && jogador.position.x + jogador.width <= outroJogador.position.x && jogador.position.x + jogador.width + jogador.velocidade.x >= outroJogador.position.x) {
-            if (jogador.position.x + jogador.width < outroJogador.position.x) {
+        if (jogador.position.y + jogador.height >= outroJogador.position.y && jogador.position.y <= outroJogador.position.y + outroJogador.height && jogador.position.x + jogador.width <= outroJogador.position.x && jogador.position.x + jogador.width + jogador.velocidade.x >= outroJogador.position.x + outroJogador.velocidade.x) {
+            //colisão
+            if (jogador.position.x + jogador.width < outroJogador.position.x && jogador.velocidade.x != 0) {
                 jogador.position.x = outroJogador.position.x - jogador.width;
             }
 
             jogador.velocidade.x = 0;
+            outroJogador.velocidade.x += 1;
+
+            if (jogador.estaDandoDash) { //impacto no dash joga o outro jogador pra frente
+                outroJogador.estaDandoDash = true;
+
+                outroJogador.velocidade.x += jogador.dashBase / 2; //outro jogador ganha metade da velocidade do jogador que bateu nele
+
+                setTimeout(() => {
+                    outroJogador.estaDandoDash = false;
+                }, 100); //tempo da animação 100ms
+
+                //jogador que bateu é arremessado pra trás
+                jogador.estaDandoDash = true;
+                jogador.velocidade.x = -3;
+
+                setTimeout(() => {
+                    jogador.estaDandoDash = false;
+                }, 30); //tempo da animação 100ms
+            }
         }
 
+        // if(jogador.position.y + jogador.height >= outroJogador.position.y && jogador.position.y <= outroJogador.position.y + outroJogador.height  &&  jogador.position.x + jogador.width <= outroJogador.position.x  &&  jogador.position.x + jogador.width + jogador.velocidade.x >= outroJogador.position.x + outroJogador.velocidade.x) {
+        //   console.log('DESGRAÇA');
+        //   outroJogador.velocidade.x = 0;
+        //   outroJogador.position.x = jogador.position.x + jogador.width;
+        // }
+
+        // if(jogador.position.y + jogador.height >= outroJogador.position.y && jogador.position.y <= outroJogador.position.y + outroJogador.height  &&  jogador.position.x >= outroJogador.position.x + outroJogador.width  &&  jogador.position.x + jogador.velocidade.x <= outroJogador.position.x + outroJogador.width + outroJogador.velocidade.x) {
+        //   console.log('DESGRAÇA 2');
+        //   outroJogador.velocidade.x = 0;
+        //   outroJogador.position.x = jogador.position.x - jogador.width;
+        // }
+
         // players na horizontal direita para esquerda
-        if (jogador.position.y + jogador.height >= outroJogador.position.y && jogador.position.y <= outroJogador.position.y + outroJogador.height && jogador.position.x >= outroJogador.position.x + outroJogador.width && jogador.position.x + jogador.velocidade.x <= outroJogador.position.x + outroJogador.width) {
-            if (jogador.position.x > outroJogador.position.x + outroJogador.width) {
+        if (jogador.position.y + jogador.height >= outroJogador.position.y && jogador.position.y <= outroJogador.position.y + outroJogador.height && jogador.position.x >= outroJogador.position.x + outroJogador.width && jogador.position.x + jogador.velocidade.x <= outroJogador.position.x + outroJogador.width + outroJogador.velocidade.x) {
+
+
+            //colisão
+            if (jogador.position.x > outroJogador.position.x + outroJogador.width && jogador.velocidade.x != 0) {
                 jogador.position.x = outroJogador.position.x + outroJogador.width;
             }
 
             jogador.velocidade.x = 0;
+            outroJogador.velocidade.x -= 1;
+
+            if (jogador.estaDandoDash) { //impacto no dash joga o outro jogador pra frente
+                outroJogador.estaDandoDash = true;
+
+                outroJogador.velocidade.x -= jogador.dashBase / 2; //outro jogador ganha metade da velocidade do jogador que bateu nele
+
+                setTimeout(() => {
+                    outroJogador.estaDandoDash = false;
+                }, 100); //tempo da animação 100ms
+
+                //jogador que bateu é arremessado pra trás
+                jogador.estaDandoDash = true;
+                jogador.velocidade.x = 3;
+
+                setTimeout(() => {
+                    jogador.estaDandoDash = false;
+                }, 30); //tempo da animação 100ms
+            }
         }
     })
 }
@@ -479,6 +727,7 @@ window.addEventListener('keyup', ({ code }) => { //quando soltar a tecla
         //teclas do jogador 0
         case 'KeyW': //soltou W
             teclas[0].cima.pressionada = false;
+            jogadores[0].debounce = false; //permite que dê double jump
             break;
         case 'KeyA': //soltou A
             teclas[0].esquerda.pressionada = false;
@@ -498,8 +747,9 @@ window.addEventListener('keyup', ({ code }) => { //quando soltar a tecla
             break;
 
         //teclas do jogador 1
-        case 'ArrowUp': //apertou CIMA
+        case 'ArrowUp': //soltou CIMA
             teclas[1].cima.pressionada = false;
+            jogadores[1].debounce = false; //permite que dê double jump
             break;
         case 'ArrowLeft': //soltou ESQUERDA
             teclas[1].esquerda.pressionada = false;
@@ -519,4 +769,3 @@ window.addEventListener('keyup', ({ code }) => { //quando soltar a tecla
             break;
     }
 })
-
